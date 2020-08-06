@@ -1,44 +1,29 @@
 from django.db import models
-from django.contrib.auth.models import BaseUserManager, AbstractBaseUser
+from django.contrib.auth.models import AbstractBaseUser
 from django.contrib.auth.models import PermissionsMixin
-
+from django.contrib.auth.models import BaseUserManager
+# Create your models here.
 
 class UserProfileManager(BaseUserManager):
-    """Class required by Django for managing our users from the management
-    command.
-    """
+    """Manager for user profiles"""
 
-    def create_user(self, email, name, password=None):
-        """Creates a new user with the given detials."""
-
-        # Check that the user provided an email.
+    def create_user(self, email, name, password=None): # if the password is not provided its ok
+        """Create a new user profile"""
         if not email:
-            raise ValueError('Users must have an email address.')
+            raise ValueError('User must have an emial address')
 
-        # Create a new user object.
-        user = self.model(
-            email=self.normalize_email(email),
-            name=name,
-        )
+        email = self.normalize_email(email)
+        user = self.model(email = email, name = name)
 
-        # Set the users password. We use this to create a password
-        # hash instead of storing it in clear text.
-        user.set_password(password)
+        user.set_password(password) #django protects your password like this
         user.save(using=self._db)
 
-        return user
+        return users
 
-    def create_superuser(self, email, name, password):
-        """Creates and saves a new superuser with given detials."""
+    def create_superuser(self,email,name,password):
+        """Create and save a new superuser with given details"""
+        user = self.create_user(email,name,password)
 
-        # Create a new user with the function we created above.
-        user = self.create_user(
-            email,
-            name,
-            password
-        )
-
-        # Make this user an admin.
         user.is_superuser = True
         user.is_staff = True
         user.save(using=self._db)
@@ -47,33 +32,25 @@ class UserProfileManager(BaseUserManager):
 
 
 class UserProfile(AbstractBaseUser, PermissionsMixin):
-    """A user profile in our system."""
-
-    email = models.EmailField(max_length=255, unique=True)
+    """Databse model for users in the system"""
+    email = models.EmailField(max_length=255,unique=True)
     name = models.CharField(max_length=255)
     is_active = models.BooleanField(default=True)
-    is_staff = models.BooleanField(default=False)
+    is_staff = models.BooleanField(default=False)# staff user should not be allowed to use everything
 
     objects = UserProfileManager()
 
-    USERNAME_FIELD = 'email'
+    USERNAME_FIELD = 'email'# instead of using a username and password they provide EmailField
     REQUIRED_FIELDS = ['name']
 
-    def get_full_name(self):
-        """
-        Required function so Django knows what to use as the users full name.
-        """
-
-        self.name
+    def get_full_name(self): #why self because you are defining a function in a class ClassName(object):
+        """ Retrieve full name of user """
+        return self.NAME
 
     def get_short_name(self):
-        """
-        Required function so Django knows what to use as the users short name.
-        """
-
-        self.name
+        """ Retrieve short name of user """
+        return self.NAME
 
     def __str__(self):
-        """What to show when we output an object as a string."""
-
-        return self.email
+        """ Return string representation of our user """
+        return self.Email
